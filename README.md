@@ -9,9 +9,12 @@ are documented as ADRs in [`docs/adr/`](docs/adr/) — start there for the "why.
 
 ```bash
 pip install -r requirements.txt
-export ANTHROPIC_API_KEY=sk-ant-...
+cp .env.example .env   # then edit .env and set your ANTHROPIC_API_KEY
 python main.py
 ```
+
+(Alternatively, skip the `.env` file and just `export ANTHROPIC_API_KEY=sk-ant-...` —
+either is picked up automatically.)
 
 Runs the three example locations from the brief (Mexicali, Monterrey, Chandler) and
 writes `output/report.md` (Markdown) and `output/report.csv` (consolidated CSV, bonus
