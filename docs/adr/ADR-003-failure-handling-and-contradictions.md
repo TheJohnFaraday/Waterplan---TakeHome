@@ -83,3 +83,14 @@ the blocklist manually after being observed — there is no general detector her
 (e.g. detecting thin/app-shell content heuristically, or querying such dashboards' actual
 backing data APIs where available) is out of scope for this timebox and would need to be
 built dimension-by-dimension as new sources are encountered at real usage scale.
+
+### Test coverage caught a real ordering bug in the ordinal scale matcher
+`tests/test_contradictions.py` covers `_position_from_text`'s label-matching branch. A test
+for `"Extremely High"` failed against the original implementation: `SCALE` is checked in
+ascending order, and `"high"` (index 3) is a substring of `"extremely high"`, so
+`"extremely high risk"` matched `"high"` first and was silently mapped to position 3
+instead of 4. Fixed by matching the longest label first. Kept as a concrete case for why
+the deterministic modules have unit tests even though the take-home didn't require them —
+this bug would have made the contradiction check systematically too lenient (treating a
+real Low-vs-Extremely-High contradiction as only |Δ|=1) with no visible symptom in a normal
+run.

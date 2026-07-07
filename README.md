@@ -28,6 +28,15 @@ Custom locations:
 python main.py --locations "Bogotá, Colombia" "Phoenix, Arizona, USA"
 ```
 
+## Unit tests
+
+The two deterministic, LLM-free modules (`verify.py`, `contradictions.py` — ADR-002,
+ADR-003) have a unit test suite, no API key required:
+
+```bash
+python -m unittest discover -s tests -v
+```
+
 ## Optional: full headless-fetch support via Docker
 
 The default path above works with zero extra setup, using static HTTP fetch only. Some
@@ -95,5 +104,6 @@ src/waterplan/
   pipeline.py             Orchestration (discovery -> fetch -> extract -> verify)
   report.py               Markdown + CSV rendering
 docs/adr/                Architecture Decision Records
+tests/                  Unit tests for verify.py and contradictions.py (no API key needed)
 Dockerfile               Optional full-fetch reproducible environment
 ```

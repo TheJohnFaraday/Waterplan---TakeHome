@@ -16,7 +16,9 @@ def _position_from_text(text: str) -> int | None:
     if score_match:
         score = float(score_match.group(1))
         return min(4, max(0, round(score) - 1))
-    for i, label in enumerate(SCALE):
+    # Check longest labels first: "high" is a substring of "extremely high", so
+    # scanning in scale order would match the wrong (shorter) label first.
+    for i, label in sorted(enumerate(SCALE), key=lambda pair: -len(pair[1])):
         if label in text_l:
             return i
     return None
