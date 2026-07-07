@@ -56,6 +56,8 @@ chunk + select_chunk (LLM picks index)  -- ADR-001 (retrieval, not generation)
         v
 verify_excerpt (deterministic substring match, no LLM)  -- ADR-002
         v
+critique_relevance (second-opinion LLM call, verified sources only)  -- ADR-006
+        v
 report (Markdown + CSV)
 ```
 
@@ -67,17 +69,15 @@ report (Markdown + CSV)
 - **ADR-004**: how this scales to 1000 locations (decoupled backpressure now; queue-based
   workers as documented future evolution).
 - **ADR-005**: stack choice (Python, Anthropic, tiered fetch) and alternatives rejected.
+- **ADR-006**: self-critique relevance check (bonus) — a second LLM opinion on already-
+  verified sources, surfaced as an additive `⚠️ LOW RELEVANCE` flag, never a silent drop
+  or downgrade of a verified entry.
 
 ## Known limitations (documented scope boundaries, not gaps)
 
 - Contradiction detection only covers the Water Stress dimension (ordinal scale). No
   automated contradiction detection for Incidents/Regulations (narrative text) — see
   ADR-003 for why a lexical-overlap proxy was rejected rather than built.
-- Self-critique agent (source-relevance bonus) not built in this pass — flagged as
-  remaining stretch scope dependent on time budget. See
-  [`docs/example-output/report.md`](docs/example-output/report.md) for a concrete case
-  (an `abc15.com` excerpt that's mostly site-navigation chrome) this component would
-  catch.
 - Headless fetch fallback requires optional Playwright install or Docker; without either,
   bot-blocked/JS-rendered sources fail cleanly as `[FAILED VALIDATION]`.
 

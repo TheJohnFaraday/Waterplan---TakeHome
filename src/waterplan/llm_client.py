@@ -32,6 +32,33 @@ SELECT_CHUNK_TOOL = {
     },
 }
 
+CRITIQUE_RELEVANCE_TOOL = {
+    "name": "critique_relevance",
+    "description": (
+        "Independently judge whether a verified excerpt actually supports a claim "
+        "about a given dimension and location, as a second opinion after extraction."
+    ),
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "relevant": {
+                "type": "boolean",
+                "description": (
+                    "True only if the excerpt substantively supports the claim for this "
+                    "specific location and dimension. False if the excerpt is boilerplate "
+                    "(navigation, ads, unrelated site chrome), off-topic, about a different "
+                    "location, or only tangentially related."
+                ),
+            },
+            "reason": {
+                "type": "string",
+                "description": "Short (<20 words) reason for the verdict.",
+            },
+        },
+        "required": ["relevant", "reason"],
+    },
+}
+
 
 class LLMClient(ABC):
     @abstractmethod
@@ -43,6 +70,10 @@ class LLMClient(ABC):
         self, query: str, max_uses: int = 3, blocked_domains: tuple[str, ...] = ()
     ) -> list[dict]:
         """Returns a list of {"url": str, "title": str} candidates."""
+
+    @abstractmethod
+    def critique_relevance(self, claim: str, excerpt: str, claim_context: str, location: str) -> dict:
+        """Returns {"relevant": bool, "reason": str} -- a second opinion on select_chunk's output."""
 
 
 class AnthropicLLMClient(LLMClient):
@@ -97,3 +128,28 @@ class AnthropicLLMClient(LLMClient):
                             seen_urls.add(url)
                             results.append({"url": url, "title": title})
         return results
+
+    def critique_relevance(self, claim: str, excerpt: str, claim_context: str, location: str) -> dict:
+        prompt = (
+            f"Location: {location}\n"
+            f"Dimension to research: {claim_context}\n\n"
+            f"A prior extraction step produced this claim and excerpt:\n"
+            f"Claim: {claim}\n"
+            f'Excerpt: "{excerpt}"\n\n'
+            f"Call critique_relevance with your own independent judgment of whether this "
+            f"excerpt substantively supports the claim for this specific location and "
+            f"dimension -- not whether the text is technically present on the page "
+            f"(that has already been verified), but whether it is actually meaningful "
+            f"signal rather than boilerplate, off-topic, or about the wrong location."
+        )
+        resp = self.client.messages.create(
+            model=self.model,
+            max_tokens=200,
+            tools=[CRITIQUE_RELEVANCE_TOOL],
+            tool_choice={"type": "tool", "name": "critique_relevance"},
+            messages=[{"role": "user", "content": prompt}],
+        )
+        for block in resp.content:
+            if block.type == "tool_use" and block.name == "critique_relevance":
+                return block.input
+        return {"relevant": True, "reason": "critique_call_failed_defaulting_to_no_flag"}

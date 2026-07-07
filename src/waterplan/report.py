@@ -22,7 +22,10 @@ def render_markdown(results: list[LocationResult]) -> str:
                 lines.append(f"- **Data:** {s.data}")
                 lines.append(f"  - **Source:** {s.url}")
                 lines.append(f'  - **Excerpt:** "{s.excerpt[:300]}"')
-                lines.append("  - **Validation:** ✅ MATCH FOUND\n")
+                lines.append("  - **Validation:** ✅ MATCH FOUND")
+                if s.low_relevance:
+                    lines.append(f"  - **⚠️ LOW RELEVANCE:** {s.critique_reason}")
+                lines.append("")
 
             for s in dim.failed_candidates:
                 lines.append(f"- **Source:** {s.url}")
@@ -39,15 +42,17 @@ def render_csv(results: list[LocationResult], path: str) -> None:
     with open(path, "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
         writer.writerow(
-            ["location", "dimension", "status", "data", "url", "excerpt", "error"]
+            ["location", "dimension", "status", "data", "url", "excerpt", "error", "low_relevance", "critique_reason"]
         )
         for loc in results:
             for dim in loc.dimensions:
                 for s in dim.sources:
                     writer.writerow(
-                        [loc.location, dim.dimension_label, "VERIFIED", s.data, s.url, s.excerpt, ""]
+                        [loc.location, dim.dimension_label, "VERIFIED", s.data, s.url, s.excerpt, "",
+                         s.low_relevance, s.critique_reason]
                     )
                 for s in dim.failed_candidates:
                     writer.writerow(
-                        [loc.location, dim.dimension_label, "FAILED_VALIDATION", "", s.url, s.excerpt, s.error]
+                        [loc.location, dim.dimension_label, "FAILED_VALIDATION", "", s.url, s.excerpt, s.error,
+                         "", ""]
                     )

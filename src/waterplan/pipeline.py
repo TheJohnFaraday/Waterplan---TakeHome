@@ -21,6 +21,8 @@ class SourceResult:
     data: str = ""
     excerpt: str = ""
     error: str = ""
+    low_relevance: bool = False
+    critique_reason: str = ""
 
 
 @dataclass
@@ -92,10 +94,17 @@ class Pipeline:
             source = await self._process_candidate(location, dim, candidate["url"])
             if source.verified:
                 result.sources.append(source)
-                logger.info(
-                    "[%s] %s: MATCH FOUND (%d/%d verified)",
-                    location, dim.label, result.verified_count, config.MIN_VERIFIED_SOURCES,
-                )
+                if source.low_relevance:
+                    logger.info(
+                        "[%s] %s: MATCH FOUND but LOW RELEVANCE (%s) (%d/%d verified)",
+                        location, dim.label, source.critique_reason,
+                        result.verified_count, config.MIN_VERIFIED_SOURCES,
+                    )
+                else:
+                    logger.info(
+                        "[%s] %s: MATCH FOUND (%d/%d verified)",
+                        location, dim.label, result.verified_count, config.MIN_VERIFIED_SOURCES,
+                    )
             else:
                 result.failed_candidates.append(source)
                 logger.info("[%s] %s: FAILED VALIDATION (%s)", location, dim.label, source.error)
@@ -135,8 +144,21 @@ class Pipeline:
         excerpt = chunks[idx].strip()
         data = selection.get("data", "").strip()
 
-        if verify_excerpt(excerpt, fetch_result.text):
-            return SourceResult(url=url, verified=True, data=data, excerpt=excerpt)
+        if not verify_excerpt(excerpt, fetch_result.text):
+            return SourceResult(
+                url=url, verified=False, excerpt=excerpt, error="excerpt_not_found_in_source"
+            )
+
+        async with self._llm_sem:
+            critique = await asyncio.to_thread(
+                self.llm.critique_relevance, data, excerpt, dim.claim_context, location
+            )
+
         return SourceResult(
-            url=url, verified=False, excerpt=excerpt, error="excerpt_not_found_in_source"
+            url=url,
+            verified=True,
+            data=data,
+            excerpt=excerpt,
+            low_relevance=not critique.get("relevant", True),
+            critique_reason=critique.get("reason", ""),
         )
