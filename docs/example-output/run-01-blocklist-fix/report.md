@@ -1,22 +1,26 @@
-# Example output — real run against the brief's 3 example locations
+# Run 1 — real run after the water-stress domain blocklist fix
 
-This is an unedited output from an actual run of the tool (`python main.py`), committed
-as evidence the pipeline works end-to-end, not just in theory. Full design rationale is
-in [`docs/adr/`](../adr/); this file is self-contained enough to read on its own.
+This is an unedited output from an actual run of the tool (`python main.py`), from
+**before the self-critique check (ADR-006) existed** — kept as a historical record
+because it demonstrates a different, still-relevant finding (see below). For the
+self-critique bonus in action, see
+[`../run-02-self-critique/report.md`](../run-02-self-critique/report.md). Full design
+rationale is in [`docs/adr/`](../../adr/).
 
 ## How to read this report
 
 - **✅ MATCH FOUND** — the `Excerpt` was independently re-fetched and verified as a
   literal (normalized) substring of the source page. Verification is deterministic code,
-  not a model judgment call — see [ADR-002](../adr/ADR-002-deterministic-verification.md).
+  not a model judgment call — see [ADR-002](../../adr/ADR-002-deterministic-verification.md).
 - **❌ [FAILED VALIDATION: reason]** — a candidate source that was tried and rejected.
   These are shown, not hidden, as an audit trail of what the tool attempted
   (`not_relevant`: the LLM found no chunk supporting the claim; `empty_page_content`:
   fetch succeeded but yielded no usable text; `headless_fetch_error`: the optional
   headless fallback wasn't available or timed out — see
-  [ADR-005](../adr/ADR-005-stack-choice.md)).
+  [ADR-005](../../adr/ADR-005-stack-choice.md)).
 - **⚠️ INSUFFICIENT SOURCES (n/2 verified)** — the dimension is still reported in full
-  rather than omitted; see [ADR-003](../adr/ADR-003-failure-handling-and-contradictions.md)
+  rather than omitted; see
+  [ADR-003](../../adr/ADR-003-failure-handling-and-contradictions.md)
   for why omission was rejected.
 - **Data** is an LLM-authored short summary — it is interpretation, meant to be checked
   against the verbatim **Excerpt** next to it, not trusted on its own.
@@ -34,15 +38,15 @@ listings) that carry no location-specific prose to extract. At 1,000-location sc
 locations will have thin, catalog-only coverage for a given dimension, and the tool
 surfaces that honestly via `INSUFFICIENT SOURCES` rather than forcing a result.
 
-**The Chandler Incidents match on `abc15.com` is empirical justification for the
-self-critique bonus (not built in this pass — see README "Known limitations").** The
-verified excerpt is real (it does appear verbatim on the page) but is largely site
-navigation chrome ("Let's Talk Things To Do Operation Safe Roads Smart Shopper...") with
-the actual article text at the tail end. Verification is doing its job correctly — the
-excerpt is genuinely on the page — but a source-relevance self-critique step would be
-exactly the right layer to additionally flag "this chunk is mostly boilerplate, low
-signal" before it reaches the report. This run is the concrete case that component is
-designed to catch, which is why it's documented here as scoped-out rather than built.
+**The Chandler Incidents match on `abc15.com` is what originally motivated building the
+self-critique bonus (ADR-006).** The verified excerpt is real (it does appear verbatim on
+the page) but is largely site navigation chrome ("Let's Talk Things To Do Operation Safe
+Roads Smart Shopper...") with the actual article text at the tail end. Verification did
+its job correctly — the excerpt is genuinely on the page — but nothing in the pipeline
+*at the time this run was captured* judged whether the selected chunk was actually good
+signal versus incidentally-verifiable boilerplate. That gap is now closed: see
+[`../run-02-self-critique/report.md`](../run-02-self-critique/report.md) for a later run
+with the self-critique check live, catching similar (and different) low-relevance cases.
 
 ---
 

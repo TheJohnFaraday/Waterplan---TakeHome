@@ -14,7 +14,10 @@ launders a hallucination as verified fact.
 ## Decision
 The LLM never authors the excerpt text. The pipeline:
 1. Fetches the raw page text (see ADR-005 for fetch strategy).
-2. Splits it into indexed chunks (paragraph-bounded, ~500-1000 chars).
+2. Splits it into indexed chunks: a fixed-size sliding window (800 chars, 100-char
+   overlap between consecutive chunks — see `verify.chunk_text`), not paragraph-aware.
+   A chunk can start or end mid-sentence; the overlap exists so a claim sitting on a
+   chunk boundary is still likely to appear whole in at least one chunk.
 3. Asks the LLM, via forced tool-calling, to return `{chunk_index, data}` — i.e. *which
    chunk* supports the claim, plus a short interpretive summary (`data`).
 4. The code — not the model — pulls the literal chunk text at that index and uses it as
@@ -34,3 +37,9 @@ excerpt. It can only point at a location in text that was independently fetched.
 - Slightly more engineering (chunking, index mapping) than "ask the model to quote the
   source," which was rejected — it relies entirely on prompt discipline and still permits
   a paraphrased "verbatim" quote to slip through a strict-match check.
+- Because chunking is fixed-size and not paragraph/sentence-aware, reported excerpts
+  routinely start or end mid-word (visible throughout `docs/example-output/report.md`,
+  e.g. `"...ent to help mitigate the crisis..."`). This is a readability cost, not an
+  integrity one — the excerpt is still a genuine, verified substring of the source; it's
+  just not trimmed to clean sentence boundaries. Fixing this (sentence-aware chunking)
+  is a UX polish item, not a correctness one, and was left out of this timebox.

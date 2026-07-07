@@ -3,10 +3,10 @@
 Automates water-risk research for a list of locations across three dimensions (water
 stress, incidents/conflicts, regulations), with every reported data point independently
 and deterministically verified against its cited source. Design rationale and trade-offs
-are documented as ADRs in [`docs/adr/`](docs/adr/) — start there for the "why." A real
-run's output is committed at
-[`docs/example-output/report.md`](docs/example-output/report.md) if you want to see a
-result without running anything yourself.
+are documented as ADRs in [`docs/adr/`](docs/adr/) — start there for the "why." Real,
+unedited runs are committed at
+[`docs/example-output/`](docs/example-output/README.md) if you want to see results
+without running anything yourself.
 
 ## Quickstart
 
