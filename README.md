@@ -3,7 +3,10 @@
 Automates water-risk research for a list of locations across three dimensions (water
 stress, incidents/conflicts, regulations), with every reported data point independently
 and deterministically verified against its cited source. Design rationale and trade-offs
-are documented as ADRs in [`docs/adr/`](docs/adr/) — start there for the "why."
+are documented as ADRs in [`docs/adr/`](docs/adr/) — start there for the "why." A real
+run's output is committed at
+[`docs/example-output/report.md`](docs/example-output/report.md) if you want to see a
+result without running anything yourself.
 
 ## Quickstart
 
@@ -71,7 +74,10 @@ report (Markdown + CSV)
   automated contradiction detection for Incidents/Regulations (narrative text) — see
   ADR-003 for why a lexical-overlap proxy was rejected rather than built.
 - Self-critique agent (source-relevance bonus) not built in this pass — flagged as
-  remaining stretch scope dependent on time budget.
+  remaining stretch scope dependent on time budget. See
+  [`docs/example-output/report.md`](docs/example-output/report.md) for a concrete case
+  (an `abc15.com` excerpt that's mostly site-navigation chrome) this component would
+  catch.
 - Headless fetch fallback requires optional Playwright install or Docker; without either,
   bot-blocked/JS-rendered sources fail cleanly as `[FAILED VALIDATION]`.
 
