@@ -11,7 +11,18 @@ class Dimension:
     search_query_template: str
     claim_context: str
     ordinal: bool = False
+    blocked_domains: tuple[str, ...] = ()
 
+
+# Known interactive map/dashboard domains that return mostly JS app-shell text with
+# no location-specific content in static HTML -- see ADR-003 "known limitation":
+# this is a blocklist of specific domains observed to fail, not a general fix for
+# unseen dashboard-style sources.
+WATER_STRESS_BLOCKED_DOMAINS = (
+    "wri.org/applications/aqueduct",
+    "resourcewatch.org",
+    "esri.com",
+)
 
 DIMENSIONS = [
     Dimension(
@@ -26,6 +37,7 @@ DIMENSIONS = [
             "in your summary."
         ),
         ordinal=True,
+        blocked_domains=WATER_STRESS_BLOCKED_DOMAINS,
     ),
     Dimension(
         key="incidents",

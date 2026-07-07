@@ -10,16 +10,14 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
+from dotenv import load_dotenv
+
 from waterplan import config
 from waterplan.llm_client import AnthropicLLMClient
 from waterplan.pipeline import Pipeline
 from waterplan.report import render_csv, render_markdown
 
 BANNER = r"""
-                                          .  .  .
-                                        .  ~  .  ~  .
-                                      (   W A T E R   )
-                                        '  .  '  .  '
                     __        __    _
                     \ \      / /_ _| |_ ___ _ __ _ __  | | __ _ _ __
                      \ \ /\ / / _` | __/ _ \ '__| '_ \ | |/ _` | '_ \
@@ -32,6 +30,7 @@ BANNER = r"""
 
 def main():
     print(BANNER)
+    load_dotenv()
     parser = argparse.ArgumentParser(description="Waterplan water-risk research tool")
     parser.add_argument(
         "--locations",
@@ -41,10 +40,18 @@ def main():
     )
     parser.add_argument("--output", default=f"{config.OUTPUT_DIR}/report.md", help="Markdown output path")
     parser.add_argument("--csv", default=f"{config.OUTPUT_DIR}/report.csv", help="Consolidated CSV output path")
-    parser.add_argument("--verbose", action="store_true")
+    parser.add_argument(
+        "--verbose", action="store_true", help="Show library-level debug logs too"
+    )
     args = parser.parse_args()
 
-    logging.basicConfig(level=logging.INFO if args.verbose else logging.WARNING)
+    logging.basicConfig(
+        level=logging.DEBUG if args.verbose else logging.INFO,
+        format="%(message)s",
+    )
+    if not args.verbose:
+        logging.getLogger("httpx").setLevel(logging.WARNING)
+        logging.getLogger("anthropic").setLevel(logging.WARNING)
 
     api_key = os.environ.get("ANTHROPIC_API_KEY")
     if not api_key:

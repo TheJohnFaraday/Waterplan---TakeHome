@@ -70,8 +70,12 @@ class Pipeline:
         result = DimensionResult(dimension_key=dim.key, dimension_label=dim.label, emoji=dim.emoji)
         query = dim.search_query_template.format(location=location)
 
+        logger.info("[%s] %s: searching (%r)", location, dim.label, query)
         async with self._llm_sem:
-            candidates = await asyncio.to_thread(self.llm.discover_urls, query)
+            candidates = await asyncio.to_thread(
+                self.llm.discover_urls, query, 3, dim.blocked_domains
+            )
+        logger.info("[%s] %s: %d candidate URL(s) found", location, dim.label, len(candidates))
 
         tried = 0
         for candidate in candidates:
@@ -81,11 +85,20 @@ class Pipeline:
                 break
             tried += 1
 
+            logger.info(
+                "[%s] %s: trying candidate %d/%d -> %s",
+                location, dim.label, tried, config.MAX_CANDIDATE_URLS_PER_DIMENSION, candidate["url"],
+            )
             source = await self._process_candidate(location, dim, candidate["url"])
             if source.verified:
                 result.sources.append(source)
+                logger.info(
+                    "[%s] %s: MATCH FOUND (%d/%d verified)",
+                    location, dim.label, result.verified_count, config.MIN_VERIFIED_SOURCES,
+                )
             else:
                 result.failed_candidates.append(source)
+                logger.info("[%s] %s: FAILED VALIDATION (%s)", location, dim.label, source.error)
 
         if dim.ordinal and result.verified_count >= 2:
             claims = [s.data for s in result.sources if s.verified]

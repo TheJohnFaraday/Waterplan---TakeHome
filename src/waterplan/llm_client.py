@@ -39,7 +39,9 @@ class LLMClient(ABC):
         """Returns {"chunk_index": int, "data": str, "relevant": bool}."""
 
     @abstractmethod
-    def discover_urls(self, query: str, max_uses: int = 3) -> list[dict]:
+    def discover_urls(
+        self, query: str, max_uses: int = 3, blocked_domains: tuple[str, ...] = ()
+    ) -> list[dict]:
         """Returns a list of {"url": str, "title": str} candidates."""
 
 
@@ -70,11 +72,16 @@ class AnthropicLLMClient(LLMClient):
                 return block.input
         return {"chunk_index": -1, "data": "", "relevant": False}
 
-    def discover_urls(self, query: str, max_uses: int = 3) -> list[dict]:
+    def discover_urls(
+        self, query: str, max_uses: int = 3, blocked_domains: tuple[str, ...] = ()
+    ) -> list[dict]:
+        web_search_tool = {"type": "web_search_20250305", "name": "web_search", "max_uses": max_uses}
+        if blocked_domains:
+            web_search_tool["blocked_domains"] = list(blocked_domains)
         resp = self.client.messages.create(
             model=self.model,
             max_tokens=1024,
-            tools=[{"type": "web_search_20250305", "name": "web_search", "max_uses": max_uses}],
+            tools=[web_search_tool],
             messages=[{"role": "user", "content": f"Search for: {query}"}],
         )
         results = []
