@@ -1,5 +1,13 @@
-"""Static config: dimensions and default locations (see ADR-001..005)."""
+"""Static config: dimensions and default locations (see ADR-001..005).
 
+Deployment-environment knobs (model choice, concurrency, cache/output paths) are
+overridable via env vars so they can differ per environment without editing code --
+see `.env.example`. Everything else here is a design decision tied to a specific ADR
+(chunking, retry caps, blocklist) and stays a code constant on purpose: those aren't
+meant to be casually overridden per environment.
+"""
+
+import os
 from dataclasses import dataclass
 
 
@@ -68,12 +76,16 @@ MIN_VERIFIED_SOURCES = 2
 MAX_CANDIDATE_URLS_PER_DIMENSION = 5
 WEB_SEARCH_MAX_USES = 3
 
-LLM_CONCURRENCY = 4
-FETCH_CONCURRENCY_PER_DOMAIN = 2
-FETCH_CONCURRENCY_GLOBAL = 10
-
 CHUNK_SIZE_CHARS = 800
 CHUNK_OVERLAP_CHARS = 100
 
-CACHE_DIR = ".cache"
-OUTPUT_DIR = "output"
+# --- Deployment-environment knobs (env-overridable, see .env.example) ---
+
+CLAUDE_MODEL = os.environ.get("CLAUDE_MODEL", "claude-sonnet-5")
+
+LLM_CONCURRENCY = int(os.environ.get("LLM_CONCURRENCY", "4"))
+FETCH_CONCURRENCY_PER_DOMAIN = int(os.environ.get("FETCH_CONCURRENCY_PER_DOMAIN", "2"))
+FETCH_CONCURRENCY_GLOBAL = int(os.environ.get("FETCH_CONCURRENCY_GLOBAL", "10"))
+
+CACHE_DIR = os.environ.get("CACHE_DIR", ".cache")
+OUTPUT_DIR = os.environ.get("OUTPUT_DIR", "output")

@@ -28,6 +28,25 @@ Custom locations:
 python main.py --locations "Bogotá, Colombia" "Phoenix, Arizona, USA"
 ```
 
+### Configuration
+
+`ANTHROPIC_API_KEY` is the only required setting. Everything else is a deployment knob
+with a working default, overridable via `.env` (see `.env.example`) without touching code:
+
+| Env var | Default | What it controls |
+|---|---|---|
+| `CLAUDE_MODEL` | `claude-sonnet-5` | Model used for discovery, extraction, and self-critique |
+| `LLM_CONCURRENCY` | `4` | Max concurrent Anthropic API calls |
+| `FETCH_CONCURRENCY_PER_DOMAIN` | `2` | Max concurrent fetches to the same domain |
+| `FETCH_CONCURRENCY_GLOBAL` | `10` | Max concurrent fetches overall |
+| `CACHE_DIR` | `.cache` | Disk cache location (ADR bonus scope) |
+| `OUTPUT_DIR` | `output` | Default report output directory |
+
+Design decisions tied to a specific ADR (chunk size/overlap, retry caps, the water-stress
+domain blocklist, dimension definitions) stay as code constants in `config.py` on purpose
+— those are trade-offs made once and documented, not meant to be casually overridden per
+environment.
+
 ## Unit tests
 
 The two deterministic, LLM-free modules (`verify.py`, `contradictions.py` — ADR-002,

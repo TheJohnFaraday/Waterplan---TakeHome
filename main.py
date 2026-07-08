@@ -12,6 +12,10 @@ sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 from dotenv import load_dotenv
 
+# Must run before importing waterplan.config: config reads its deployment-knob
+# env vars (CLAUDE_MODEL, concurrency, cache/output dirs) at import time.
+load_dotenv()
+
 from waterplan import config
 from waterplan.llm_client import AnthropicLLMClient
 from waterplan.pipeline import Pipeline
@@ -30,7 +34,6 @@ BANNER = r"""
 
 def main():
     print(BANNER)
-    load_dotenv()
     parser = argparse.ArgumentParser(description="Waterplan water-risk research tool")
     parser.add_argument(
         "--locations",
@@ -58,7 +61,7 @@ def main():
         print("ERROR: set ANTHROPIC_API_KEY environment variable.", file=sys.stderr)
         sys.exit(1)
 
-    llm = AnthropicLLMClient(api_key=api_key)
+    llm = AnthropicLLMClient(api_key=api_key, model=config.CLAUDE_MODEL)
     pipeline = Pipeline(llm=llm)
 
     results = asyncio.run(pipeline.run(args.locations))
