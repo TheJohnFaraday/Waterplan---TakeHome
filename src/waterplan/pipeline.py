@@ -75,7 +75,7 @@ class Pipeline:
         logger.info("[%s] %s: searching (%r)", location, dim.label, query)
         async with self._llm_sem:
             candidates = await asyncio.to_thread(
-                self.llm.discover_urls, query, 3, dim.blocked_domains
+                self.llm.discover_urls, query, config.WEB_SEARCH_MAX_USES, dim.blocked_domains
             )
         logger.info("[%s] %s: %d candidate URL(s) found", location, dim.label, len(candidates))
 

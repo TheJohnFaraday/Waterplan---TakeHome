@@ -71,16 +71,34 @@ report (Markdown + CSV)
 ```
 
 - **ADR-001**: the LLM never authors the excerpt text — it only points at a chunk index
-  in independently fetched text; code extracts the literal excerpt.
+  in independently fetched text; code extracts the literal excerpt. Trade-off: this rules
+  out paraphrased or summarized excerpts entirely, even correct ones — chosen because a
+  model that can paraphrase can also hallucinate, and there's no cheap way to tell those
+  apart after the fact.
 - **ADR-002**: verification is a pure function, no model in the pass/fail decision.
+  Trade-off: exact (normalized) substring match has false negatives — a real, true claim
+  phrased slightly differently than the source text fails validation — but the alternative
+  (fuzzy/semantic matching) reintroduces a judgment call exactly where the anti-hallucination
+  guarantee needs to be strongest.
 - **ADR-003**: minimum-sourcing retry policy, failure flagging, and the ordinal-only
-  contradiction detection rule.
+  contradiction detection rule. Trade-off: contradiction detection only covers the one
+  dimension (water stress) with a standardized scale; narrative dimensions get no automated
+  detection rather than an unreliable lexical-overlap proxy — an honest gap over a fake
+  signal.
 - **ADR-004**: how this scales to 1000 locations (decoupled backpressure now; queue-based
-  workers as documented future evolution).
+  workers as documented future evolution). Trade-off: not built for this submission — the
+  brief's example scope is 3 locations, and building unused infrastructure would cost time
+  better spent hardening what's graded.
 - **ADR-005**: stack choice (Python, Anthropic, tiered fetch) and alternatives rejected.
+  Trade-off: Python over Go/Node because none of the five eval axes reward raw runtime
+  throughput; Anthropic over a separate search API because `web_search` returns citable
+  URLs directly, one fewer moving part and one fewer credential to manage.
 - **ADR-006**: self-critique relevance check (bonus) — a second LLM opinion on already-
   verified sources, surfaced as an additive `⚠️ LOW RELEVANCE` flag, never a silent drop
-  or downgrade of a verified entry.
+  or downgrade of a verified entry. Trade-off: costs a second LLM call per verified source
+  (~$0.0025 each) purely for a soft signal a human still has to read — accepted because
+  silently trusting "verified" as "relevant" was the actual gap it closes (see the
+  `abc15.com` case in `docs/example-output/`).
 
 ## Known limitations (documented scope boundaries, not gaps)
 
