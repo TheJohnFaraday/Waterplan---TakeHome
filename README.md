@@ -1,5 +1,7 @@
 # Waterplan Water Risk Research Tool
 
+![CLI banner and live progress log](docs/assets/cli-banner-and-progress-log.png)
+
 Automates water-risk research for a list of locations across three dimensions (water
 stress, incidents/conflicts, regulations), with every reported data point independently
 and deterministically verified against its cited source. Design rationale and trade-offs
