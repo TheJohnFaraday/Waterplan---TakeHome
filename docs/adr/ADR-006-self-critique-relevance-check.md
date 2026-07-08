@@ -49,3 +49,17 @@ deferred.
   the Markdown report and the CSV bonus output.
 - This does not replace deterministic verification (ADR-002) as the pass/fail gate — it's
   a visibility layer on top of already-verified data, never a substitute for it.
+
+## Observed finding: the check's effectiveness depends on the underlying model
+A same-day comparison run with `CLAUDE_MODEL` switched to Haiku 4.5 (the cheapest current
+Claude model — see `docs/example-output/run-03-haiku-comparison/`) produced **zero**
+`LOW RELEVANCE` flags on the same three locations, including on the exact
+`fox10phoenix.com` Chandler source that Sonnet 5 flagged in
+`docs/example-output/run-02-self-critique/`. Water Stress sourcing yield also dropped for
+two of three locations under Haiku (`select_chunk` abstaining more often on marginal
+candidates). Neither is a correctness bug — `critique_relevance` and `select_chunk` are
+still doing exactly what they're specified to do, just with a weaker judge — but it means
+the self-critique check's real-world catch rate is not model-independent. Sonnet 5 stays
+the `config.py` default; this is flagged as a concrete consideration if cost pressure at
+1,000-location scale (ADR-004) ever motivates downgrading the model, not as something
+solved here.
